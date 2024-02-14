@@ -13,16 +13,19 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { schemaLogin } from "../../../common/utils/SchemaForm";
 import InputTextField from "../../Fields/InputTextField";
 import { EmailIcon, PasswordIcon } from "../../../../assets/icons";
+import CustomButton from "../../Buttons/CustomButton";
 
 type Props = {
   onFlipCardRegister?: () => void;
   onLoginSubmit?: (data) => void;
+  isLoading?: boolean;
 };
 
 export default function LoginCard({
   onFlipCardRegister,
   onLoginSubmit,
-}: Props) {
+  isLoading,
+}: Readonly<Props>) {
   const {
     control,
     handleSubmit,
@@ -66,22 +69,11 @@ export default function LoginCard({
             Esqueceu a senha?
           </ButtonText>
         </Button>
-        <TouchableOpacity
-          style={{
-            backgroundColor: "#006EE9",
-            height: 55,
-            borderRadius: 15,
-            marginTop: 20,
-            alignItems: "center",
-            justifyContent: "center",
-          }}
+        <CustomButton
+          isLoading={isLoading}
+          label="Login"
           onPress={handleSubmit(onLoginSubmit)}
-          activeOpacity={0.8}
-        >
-          <Text fontFamily="Poppins_400Regular" color={"#fff"}>
-            Login
-          </Text>
-        </TouchableOpacity>
+        />
       </FormControl>
       <View flexDirection="row" alignItems="center" gap={5} mt={20}>
         <CustomText

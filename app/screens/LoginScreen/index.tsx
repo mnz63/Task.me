@@ -1,54 +1,24 @@
 import { Image, KeyboardAvoidingView, Platform } from "react-native";
-import { View, useToast } from "@gluestack-ui/themed";
+import { View } from "@gluestack-ui/themed";
 import { useState } from "react";
 import FlipCard from "react-native-flip-card";
 import RegisterCard from "../../components/Cards/RegisterCard";
 import Animated, { FadeInLeft, FadeOutLeft } from "react-native-reanimated";
 import LoginCard from "../../components/Cards/LoginCard";
 import Layout from "../../components/AuthLayout";
-import { createUserWithEmailAndPassword } from "firebase/auth";
-
-import CustomToast from "../../components/Toast";
-import { auth } from "../../../firebaseConfig";
-import { updateProfile } from "firebase/auth";
 import { useUserAuthContext } from "../../features/Auth/UserContext";
+import useCreateUser from "../../features/User/hooks/useCreateUser";
 
 export default function LoginScreen() {
   const [isFlipped, setIsFlipped] = useState(false);
-  const toast = useToast();
+  const { createUser, loading } = useCreateUser();
 
   const handleRegisterSubmit = async (data) => {
-    await createUserWithEmailAndPassword(auth, data?.email, data?.password);
-    await updateProfile(auth.currentUser, {
-      displayName: data?.username,
-    })
-      .then(() => {
-        console.log("Account created successfully!");
-        toast.show({
-          placement: "top",
-          render: () =>
-            CustomToast({
-              title: "Conta criada com sucesso!",
-              message: "Realize login.",
-              type: "success",
-            }),
-        });
-        setIsFlipped(false);
-      })
-      .catch((err) => {
-        toast.show({
-          placement: "top",
-          render: () =>
-            CustomToast({
-              title: "Erro ao cadastrar conta!",
-              message: err,
-              type: "error",
-            }),
-        });
-      });
+    await createUser(data);
+    setIsFlipped(false);
   };
 
-  const { login } = useUserAuthContext();
+  const { login, loginLoading } = useUserAuthContext();
 
   return (
     <Animated.View entering={FadeInLeft} exiting={FadeOutLeft}>
@@ -82,6 +52,7 @@ export default function LoginScreen() {
               <LoginCard
                 onFlipCardRegister={() => setIsFlipped(true)}
                 onLoginSubmit={login}
+                isLoading={loginLoading || loading}
               />
             </View>
             <View

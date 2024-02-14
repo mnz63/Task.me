@@ -6,9 +6,10 @@ import { CalendarIcon } from "../../../../../assets/icons";
 
 type Props = {
   isStart?: boolean;
+  selectDate?: (date: string) => void;
 };
 
-export default function SelectDateField() {
+export default function SelectDateField({ selectDate }: Props) {
   const today = moment().format("YYYY-MM-DD");
   const [selectedDate, setSelectedDate] = useState(
     moment(today).format("YYYY/MM/DD")
@@ -84,7 +85,10 @@ export default function SelectDateField() {
         >
           <DatePicker
             selected={selectedDate}
-            onSelectedChange={(date) => setSelectedDate(date)}
+            onSelectedChange={(date) => {
+              setSelectedDate(date);
+              selectDate(date);
+            }}
             mode="calendar"
             minimumDate={today}
             options={{
