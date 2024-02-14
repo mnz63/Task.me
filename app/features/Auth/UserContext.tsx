@@ -1,12 +1,6 @@
-import {
-  User,
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  signOut,
-  updateProfile,
-} from "firebase/auth";
+import { User, signInWithEmailAndPassword, signOut } from "firebase/auth";
 import { auth, useAuth } from "../../../firebaseConfig";
-import { createContext, useCallback, useContext } from "react";
+import { createContext, useCallback, useContext, useState } from "react";
 import {
   NavigationProp,
   ParamListBase,
@@ -20,6 +14,7 @@ export type AuthContextProps = {
   login({ email, password }): Promise<any>;
   logout(): Promise<void>;
   me: Partial<User>;
+  loginLoading: boolean;
 };
 
 export const AuthContext = createContext<AuthContextProps>({
@@ -30,6 +25,7 @@ export const AuthContext = createContext<AuthContextProps>({
     return;
   },
   me: null,
+  loginLoading: false,
 });
 
 export function AuthProvider({ children }) {
@@ -43,34 +39,42 @@ export function AuthProvider({ children }) {
     }
   };
 
+  const [loginLoading, setLoginLoading] = useState(false);
+
   const login = useCallback(
     async ({ email, password }: { email: string; password: string }) => {
+      setLoginLoading(true);
       try {
-        signInWithEmailAndPassword(auth, email, password).then((res) => {
-          res?.user?.getIdToken().then((token) => storeToken(token));
+        await signInWithEmailAndPassword(auth, email, password)
+          .then((res) => {
+            res?.user?.getIdToken().then((token) => storeToken(token));
 
-          toast.show({
-            placement: "top",
-            render: () =>
-              CustomToast({
-                title: "Login realizado com sucesso!",
-                message: "Bem vindo.",
-                type: "success",
-              }),
+            toast.show({
+              placement: "top",
+              render: () =>
+                CustomToast({
+                  title: "Login realizado com sucesso!",
+                  message: "Bem vindo.",
+                  type: "success",
+                }),
+            });
+            navigate("Home");
+          })
+          .catch(() => {
+            toast.show({
+              placement: "top",
+              render: () =>
+                CustomToast({
+                  title: "Erro ao realizar login!",
+                  message: "Credênciais incorretas.",
+                  type: "error",
+                }),
+            });
           });
-          navigate("Home");
-        });
       } catch (error) {
-        toast.show({
-          placement: "top",
-          render: () =>
-            CustomToast({
-              title: "Erro ao realizar login!",
-              message: "Credênciais incorretas.",
-              type: "error",
-            }),
-        });
+        console.log(error);
       }
+      setLoginLoading(false);
     },
     [navigate]
   );
@@ -101,6 +105,7 @@ export function AuthProvider({ children }) {
         login,
         logout,
         me,
+        loginLoading,
       }}
     >
       {children}

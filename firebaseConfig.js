@@ -1,5 +1,6 @@
 import { initializeApp, getApp } from "firebase/app";
 import { getStorage } from "firebase/storage";
+import { getFirestore } from "firebase/firestore";
 import {
   getAuth,
   onAuthStateChanged,
@@ -24,6 +25,7 @@ const auth = initializeAuth(app, {
   persistence: getReactNativePersistence(ReactNativeAsyncStorage),
 });
 const storage = getStorage(app);
+const db = getFirestore(app);
 
 function useAuth() {
   const [currentUser, setCurrentUser] = useState();
@@ -36,4 +38,4 @@ function useAuth() {
   return currentUser;
 }
 
-export { app, auth, getApp, getAuth, storage, useAuth };
+export { app, auth, getApp, getAuth, storage, useAuth, db };

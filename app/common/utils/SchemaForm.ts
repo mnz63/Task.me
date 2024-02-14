@@ -11,3 +11,8 @@ export const schemaLogin = yup.object({
   email: yup.string().email('Insira um endereço de e-mail válido').required('O e-mail é obrigatório'),
   password: yup.string().required('A senha é obrigatória')
 }).required()
+
+export const schemaCreateTask = yup.object({
+  title: yup.string().required('Título da tarefa é obrigatório'),
+  description: yup.string().required('A descrição é obrigatória')
+}).required()

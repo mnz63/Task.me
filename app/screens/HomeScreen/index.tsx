@@ -1,32 +1,43 @@
 import Animated, { FadeInLeft, FadeOutLeft } from "react-native-reanimated";
 import Layout from "../../components/AuthLayout";
 import { View, Text } from "@gluestack-ui/themed";
-import { format } from "date-fns";
+import { format, getHours } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { NotificationIcon } from "../../../assets/icons";
 import { Dimensions, FlatList, TouchableOpacity } from "react-native";
 import NotTasksFound from "../../components/NotTasksFound";
 import { TaskCard } from "../../components/Cards/TaskCard";
 import { DailyTask } from "../../components/DailyTask";
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useUserAuthContext } from "../../features/Auth/UserContext";
+import { doc, onSnapshot } from "firebase/firestore";
+import { db } from "../../../firebaseConfig";
+import useCreateOneTask, {
+  TaskDataType,
+} from "../../features/Tasks/hooks/useCreateOneTask";
 
 export default function HomeScreen({ navigation }) {
   const now = new Date();
   const todayFormated = format(now, "EEEE, d, MMM", { locale: ptBR });
+  const hours = getHours(now);
   const capitalized =
     todayFormated?.charAt(0).toUpperCase() + todayFormated?.slice(1);
 
-  const data = [
-    { priority: 1, completed: true },
-    { priority: 2, completed: true },
-    { priority: 3, completed: false },
-    { priority: 1, completed: false },
-    { priority: 2, completed: false },
-    { priority: 3, completed: true },
-  ];
+  const [data, setData] = useState<Array<TaskDataType>>([]);
+  const { me } = useUserAuthContext();
+  const docRef = doc(db, "users", me?.uid);
+
+  useMemo(() => {
+    onSnapshot(docRef, (doc) => {
+      setData(doc.data().tasks);
+    });
+  }, [onSnapshot, setData]);
 
   const height = Dimensions.get("window").height;
+
+  const { createTask } = useCreateOneTask();
+  const userFirstName = me?.displayName?.split(" ")?.[0];
 
   const authCheck = async () => {
     const value = await AsyncStorage.getItem("user-token");
@@ -39,6 +50,16 @@ export default function HomeScreen({ navigation }) {
     authCheck();
   }, []);
 
+  function getTimeofDay() {
+    if (hours >= 6 && hours < 12) {
+      return "Tenha um bom dia!";
+    } else if (hours >= 12 && hours < 18) {
+      return "Tenha uma boa tarde!";
+    } else {
+      return "Tenha uma boa noite!";
+    }
+  }
+
   return (
     <Animated.View entering={FadeInLeft} exiting={FadeOutLeft}>
       <Layout>
@@ -46,7 +67,19 @@ export default function HomeScreen({ navigation }) {
           <Text fontFamily="Poppins_400Regular" color={"#000"} fontSize={13}>
             {capitalized}
           </Text>
-          <TouchableOpacity activeOpacity={0.7}>
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => {
+              createTask({
+                title: "UI Design",
+                category: "Priority",
+                description: "UI Mobile Development",
+                startDate: new Date(),
+                endDate: new Date(),
+                userId: me?.uid,
+              });
+            }}
+          >
             <NotificationIcon color={"#006EE9"} />
           </TouchableOpacity>
         </View>
@@ -57,10 +90,10 @@ export default function HomeScreen({ navigation }) {
             fontSize={23}
             lineHeight={29}
           >
-            Bem vindo, Danilo
+            {`Bem vindo, ${userFirstName}`}
           </Text>
           <Text fontFamily="Poppins_400Regular" color={"#000"} fontSize={16}>
-            Tenha um bom dia!
+            {getTimeofDay()}
           </Text>
         </View>
 
@@ -78,7 +111,9 @@ export default function HomeScreen({ navigation }) {
             horizontal
             ItemSeparatorComponent={() => <View style={{ width: 20 }} />}
             ListEmptyComponent={() => <NotTasksFound />}
-            renderItem={({ item }) => <TaskCard priority={item.priority} />}
+            renderItem={({ item }) => (
+              <TaskCard title={item?.title} priority={1} />
+            )}
             showsHorizontalScrollIndicator={false}
             initialNumToRender={3}
           />
@@ -97,7 +132,7 @@ export default function HomeScreen({ navigation }) {
             data={data}
             ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
             ListEmptyComponent={() => <NotTasksFound />}
-            renderItem={({ item }) => <DailyTask completed={item.completed} />}
+            renderItem={({ item }) => <DailyTask completed={false} />}
             showsVerticalScrollIndicator={false}
             initialNumToRender={3}
             style={{

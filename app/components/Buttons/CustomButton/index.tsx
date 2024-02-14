@@ -1,12 +1,22 @@
 import { TouchableOpacity } from "react-native";
-import { Text } from "@gluestack-ui/themed";
+import { Spinner, Text } from "@gluestack-ui/themed";
 
-export default function CustomButton({ label }) {
+type Props = {
+  label?: string;
+  onPress?: () => void;
+  isLoading?: boolean;
+};
+
+export default function CustomButton({
+  label,
+  onPress,
+  isLoading,
+}: Readonly<Props>) {
   return (
     <TouchableOpacity
       style={{
         backgroundColor: "#006EE9",
-        height: 50,
+        height: 55,
         width: "100%",
         borderRadius: 15,
         marginTop: 20,
@@ -14,10 +24,15 @@ export default function CustomButton({ label }) {
         justifyContent: "center",
       }}
       activeOpacity={0.8}
+      onPress={onPress}
     >
-      <Text fontFamily="Poppins_400Regular" color={"#fff"}>
-        {label}
-      </Text>
+      {isLoading ? (
+        <Spinner size={"small"} color={"#FFF"} />
+      ) : (
+        <Text fontFamily="Poppins_400Regular" color={"#fff"}>
+          {label}
+        </Text>
+      )}
     </TouchableOpacity>
   );
 }

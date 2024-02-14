@@ -2,8 +2,6 @@ import {
   Avatar,
   AvatarFallbackText,
   AvatarImage,
-  Spinner,
-  Text,
   View,
   useToast,
 } from "@gluestack-ui/themed";
@@ -23,21 +21,17 @@ import * as ImagePicker from "expo-image-picker";
 import { storage, useAuth } from "../../../firebaseConfig";
 import { User, updateProfile, updatePassword } from "firebase/auth";
 import CustomToast from "../../components/Toast";
+import CustomButton from "../../components/Buttons/CustomButton";
+import useEditProfile from "../../features/User/hooks/useEditProfile";
 
 export default function EditProfileScreen() {
   const { navigate }: NavigationProp<ParamListBase> = useNavigation();
   const [image, setImage] = useState(null);
   const [previewImage, setPreviewImage] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const toast = useToast();
   const currentUser: User = useAuth();
 
-  const {
-    control,
-    handleSubmit,
-    formState: { errors },
-    setValue,
-  } = useForm({});
+  const { control, handleSubmit, setValue } = useForm({});
+  const { updateUser, updateUserProfileImage, loading } = useEditProfile();
 
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
@@ -53,72 +47,15 @@ export default function EditProfileScreen() {
   };
 
   const onSubmit = async (data) => {
-    setIsLoading(true);
     if (previewImage) {
-      const response = await fetch(previewImage);
-      const blob = await response.blob();
-      const imageRef = ref(storage, currentUser.uid + ".png");
-      await uploadBytes(imageRef, blob);
-      const photoURL = await getDownloadURL(imageRef);
-      updateProfile(currentUser, { photoURL })
-        .then(() => {
-          toast.show({
-            placement: "top",
-            render: () =>
-              CustomToast({
-                title: "Perfil atualizado com sucesso!",
-                message: "Informações atualizadas.",
-                type: "success",
-              }),
-          });
-        })
-        .catch((err) => {
-          console.log(err);
-          toast.show({
-            placement: "top",
-            render: () =>
-              CustomToast({
-                title: "Erro ao atualizar perfil!",
-                message: "Erro ao atualizar perfil.",
-                type: "success",
-              }),
-          });
-        });
+      await updateUserProfileImage({
+        currentUser,
+        profileImg: previewImage,
+      });
       setPreviewImage(null);
     }
-    try {
-      if (data?.newPassword) {
-        await updatePassword(currentUser, data.newPassword);
-      }
 
-      if (data?.username) {
-        await updateProfile(currentUser, {
-          displayName: data?.username,
-        });
-      }
-
-      toast.show({
-        placement: "top",
-        render: () =>
-          CustomToast({
-            title: "Perfil atualizado com sucesso!",
-            message: "Perfil atualizado com sucesso.",
-            type: "success",
-          }),
-      });
-    } catch (e) {
-      toast.show({
-        placement: "top",
-        render: () =>
-          CustomToast({
-            title: "Erro ao atualizar perfil!",
-            message: "Erro ao atualizar perfil.",
-            type: "error",
-          }),
-      });
-    }
-
-    setIsLoading(false);
+    await updateUser({ ...data, currentUser });
   };
 
   useEffect(() => {
@@ -188,26 +125,11 @@ export default function EditProfileScreen() {
           placeholder="Nova senha"
           label="Nova senha"
         />
-        <TouchableOpacity
-          style={{
-            backgroundColor: "#006EE9",
-            height: 55,
-            borderRadius: 15,
-            marginTop: 20,
-            alignItems: "center",
-            justifyContent: "center",
-          }}
+        <CustomButton
+          isLoading={loading}
+          label="Salvar"
           onPress={handleSubmit(onSubmit)}
-          activeOpacity={0.8}
-        >
-          {isLoading ? (
-            <Spinner size={"small"} color={"#FFF"} />
-          ) : (
-            <Text fontFamily="Poppins_400Regular" color={"#fff"}>
-              Salvar
-            </Text>
-          )}
-        </TouchableOpacity>
+        />
       </View>
     </Layout>
   );

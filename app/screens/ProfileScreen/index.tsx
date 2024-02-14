@@ -9,7 +9,6 @@ import { useEffect, useState } from "react";
 import {
   NavigationProp,
   ParamListBase,
-  useIsFocused,
   useNavigation,
 } from "@react-navigation/native";
 import { useUserAuthContext } from "../../features/Auth/UserContext";
@@ -22,8 +21,9 @@ export default function ProfileScreen({ navigation }) {
   const { me } = useUserAuthContext();
 
   useEffect(() => {
-    navigation.addListener("focus", () => {
-      me?.reload();
+    navigation.addListener("focus", async () => {
+      await me?.reload();
+      console.log("reload");
     });
   }, [navigation]);
 

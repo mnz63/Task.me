@@ -11,9 +11,10 @@ import {
 
 type Props = {
   priority?: number;
+  title?: string;
 };
 
-export const TaskCard = memo(({ priority }: Props) => {
+export const TaskCard = memo(({ priority, title }: Props) => {
   const background =
     priority === 1 ? "#006EE9" : priority === 2 ? "#362075" : "#CD2C2C";
 
@@ -56,7 +57,7 @@ export const TaskCard = memo(({ priority }: Props) => {
         </View>
         <View>
           <Text fontFamily="Poppins_600SemiBold" color={"#FFF"} fontSize={16}>
-            {truncate("Ir à academia academia academia", 23)}
+            {truncate(title, 23)}
           </Text>
         </View>
         <View gap={5}>

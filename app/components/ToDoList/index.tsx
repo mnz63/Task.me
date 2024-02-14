@@ -7,7 +7,7 @@ import CreateToDoModal from "../Modals/ToDoModal";
 
 export default function ToDoList() {
   const { height } = Dimensions.get("window");
-  const data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 7];
+  const data = [1];
   const [modalOptions, setModalOptions] = useState({
     isOpen: false,
     isEdit: false,
